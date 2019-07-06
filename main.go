@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"math"
 	"math/rand"
+	"strings"
 	"time"
 )
 
@@ -33,7 +34,7 @@ type code struct {
 const numSlots = 4
 
 func (c code) String() string {
-	return c.slot1.String() + " " + c.slot2.String() + " " + c.slot3.String() + " " + c.slot4.String()
+	return strings.Join([]string{c.slot1.String(), c.slot2.String(), c.slot3.String(), c.slot4.String()}, " ")
 }
 
 // feedback is given through the codemaster placing up to 4 black and white pegs
