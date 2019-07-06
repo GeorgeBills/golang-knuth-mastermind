@@ -1,5 +1,11 @@
 package main
 
+import (
+	"fmt"
+	"math/rand"
+	"time"
+)
+
 // codePeg is one of the coloured pegs that can be placed in a slot.
 type codePeg uint8
 
@@ -10,6 +16,7 @@ const (
 	cpYellow
 	cpGreen
 	cpBlue
+	maxCodePeg = cpBlue
 )
 
 // code represents the four slots that each contain a codePeg.
@@ -33,5 +40,21 @@ const (
 )
 
 func main() {
+	now := time.Now().Unix()
+	source := rand.NewSource(now)
+	rnd := rand.New(source)
+	code := randomCode(rnd)
+	fmt.Printf("Code: %s\n", code)
+}
 
+func randomCode(rnd *rand.Rand) code {
+	randomPeg := func() codePeg {
+		return codePeg(rnd.Intn(int(maxCodePeg + 1)))
+	}
+	return code{
+		slot1: randomPeg(),
+		slot2: randomPeg(),
+		slot3: randomPeg(),
+		slot4: randomPeg(),
+	}
 }
