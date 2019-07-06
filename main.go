@@ -48,12 +48,26 @@ const (
 	kpWhite
 )
 
+type feedback struct {
+	pegs []keyPeg
+}
+
 func main() {
-	now := time.Now().Unix()
-	source := rand.NewSource(now)
+	seed := time.Now().Unix()
+	guessch := make(chan code)
+	feedbackch := make(chan feedback)
+	go codemaker(seed, guessch, feedbackch)
+	go codebreaker(guessch, feedbackch)
+}
+
+func codemaker(seed int64, guessch <-chan code, feedbackch chan<- feedback) {
+	source := rand.NewSource(seed)
 	rnd := rand.New(source)
 	code := randomCode(rnd)
 	fmt.Printf("Code: %s\n", code)
+}
+
+func codebreaker(guessch chan<- code, feedbackch <-chan feedback) {
 	possibles := getPossibleCodes()
 	fmt.Printf("%d possible codes\n", len(possibles))
 }
