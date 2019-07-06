@@ -44,3 +44,11 @@ func TestAssess(t *testing.T) {
 		})
 	}
 }
+
+func BenchmarkAssess(b *testing.B) {
+	c := code{cpRed, cpYellow, cpGreen, cpBlue}
+	guess := code{cpRed, cpGreen, cpYellow, cpWhite}
+	for i := 0; i < b.N; i++ {
+		_ = c.assess(guess)
+	}
+}
