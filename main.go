@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"math"
 	"math/rand"
 	"time"
 )
@@ -29,6 +30,8 @@ type code struct {
 	slot4 codePeg
 }
 
+const numSlots = 4
+
 func (c code) String() string {
 	return c.slot1.String() + " " + c.slot2.String() + " " + c.slot3.String() + " " + c.slot4.String()
 }
@@ -51,6 +54,8 @@ func main() {
 	rnd := rand.New(source)
 	code := randomCode(rnd)
 	fmt.Printf("Code: %s\n", code)
+	possibles := getPossibleCodes()
+	fmt.Printf("%d possible codes\n", len(possibles))
 }
 
 func randomCode(rnd *rand.Rand) code {
@@ -63,4 +68,20 @@ func randomCode(rnd *rand.Rand) code {
 		slot3: randomPeg(),
 		slot4: randomPeg(),
 	}
+}
+
+func getPossibleCodes() []code {
+	numCodes := int(math.Pow(float64(maxCodePeg), numSlots))
+	codes := make([]code, 0, numCodes)
+	var i, j, k, l codePeg
+	for i = 0; i <= maxCodePeg; i++ {
+		for j = 0; j <= maxCodePeg; j++ {
+			for k = 0; k <= maxCodePeg; k++ {
+				for l = 0; l <= maxCodePeg; l++ {
+					codes = append(codes, code{i, j, k, l})
+				}
+			}
+		}
+	}
+	return codes
 }
