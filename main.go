@@ -36,20 +36,14 @@ func (c code) String() string {
 	return c.slot1.String() + " " + c.slot2.String() + " " + c.slot3.String() + " " + c.slot4.String()
 }
 
-// keyPeg is one of the pegs that can be placed to indicate a correctly guessed
-// colour, which may or may not be in the correct slot.
-type keyPeg uint8
-
-const (
-	// kpBlack indicates a correctly guessed color in the correct slot.
-	kpBlack keyPeg = iota
-
-	// kpWhite indicates a correctly guessed colour in an incorrect slot.
-	kpWhite
-)
-
+// feedback is given through the codemaster placing up to 4 black and white pegs
 type feedback struct {
-	pegs []keyPeg
+	numBlack uint8 // black pegs indicate a correctly guessed colour in the correct slot
+	numWhite uint8 // white pegs indicate a correctly guessed colour in an incorrect slot
+}
+
+func (r feedback) isCorrect() bool {
+	return r.numBlack == numSlots
 }
 
 func main() {
