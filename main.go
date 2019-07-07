@@ -46,14 +46,14 @@ func codebreaker(guessch chan<- code, feedbackch <-chan feedback, wg *sync.WaitG
 	fmt.Printf("%d possible codes\n", len(possibles))
 
 	// make initial guess
-	guessch <- code{cpBlack, cpBlack, cpWhite, cpWhite}
+	guess := code{cpBlack, cpBlack, cpWhite, cpWhite}
+	guessch <- guess
 	feedback := <-feedbackch
 
 	// loop until we've guessed correctly
 	for !feedback.isCorrect() {
 		// literally the worst guessing algorithm possible
-		guess := possibles[0]
-		possibles = possibles[1:]
+		guess, possibles = possibles[0], possibles[1:]
 		fmt.Printf("Guessing %s\n", guess)
 		guessch <- guess
 		feedback = <-feedbackch
@@ -67,12 +67,11 @@ func randomCode(rnd *rand.Rand) code {
 	randomPeg := func() codePeg {
 		return codePeg(rnd.Intn(int(maxCodePeg + 1)))
 	}
-	return code{
-		slot1: randomPeg(),
-		slot2: randomPeg(),
-		slot3: randomPeg(),
-		slot4: randomPeg(),
+	c := code{}
+	for i := 0; i < numSlots; i++ {
+		c[i] = randomPeg()
 	}
+	return c
 }
 
 func getPossibleCodes() []code {

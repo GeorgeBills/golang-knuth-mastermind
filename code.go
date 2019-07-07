@@ -20,17 +20,12 @@ const (
 )
 
 // code represents the four slots that each contain a codePeg.
-type code struct {
-	slot1 codePeg
-	slot2 codePeg
-	slot3 codePeg
-	slot4 codePeg
-}
+type code [numSlots]codePeg
 
 const numSlots = 4
 
 func (c code) String() string {
-	return strings.Join([]string{c.slot1.String(), c.slot2.String(), c.slot3.String(), c.slot4.String()}, " ")
+	return strings.Join([]string{c[0].String(), c[1].String(), c[2].String(), c[3].String()}, " ")
 }
 
 func (c code) assess(guess code) feedback {
@@ -38,10 +33,10 @@ func (c code) assess(guess code) feedback {
 
 	// count the colours in the code
 	var colourCount [maxCodePeg + 1]uint8
-	colourCount[c.slot1]++
-	colourCount[c.slot2]++
-	colourCount[c.slot3]++
-	colourCount[c.slot4]++
+	for i := 0; i < numSlots; i++ {
+		colour := c[i]
+		colourCount[colour]++
+	}
 
 	// assess each code peg in the guess
 	assessSlot := func(guess, real codePeg) {
@@ -57,10 +52,9 @@ func (c code) assess(guess code) feedback {
 			colourCount[guess]--
 		}
 	}
-	assessSlot(guess.slot1, c.slot1)
-	assessSlot(guess.slot2, c.slot2)
-	assessSlot(guess.slot3, c.slot3)
-	assessSlot(guess.slot4, c.slot4)
+	for i := 0; i < numSlots; i++ {
+		assessSlot(guess[i], c[i])
+	}
 
 	return f
 }
