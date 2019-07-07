@@ -25,6 +25,7 @@ func codebreaker(guessch chan<- code, feedbackch <-chan feedback, wg *sync.WaitG
 		fmt.Printf("Guessing %s\n", guess)
 		guessch <- guess
 		feedback = <-feedbackch
+		fmt.Printf("Feedback: %v\n", feedback)
 	}
 
 	close(guessch)

@@ -10,7 +10,7 @@ func codemaker(seed int64, guessch <-chan code, feedbackch chan<- feedback, wg *
 	source := rand.NewSource(seed)
 	rnd := rand.New(source)
 	code := randomCode(rnd)
-	fmt.Printf("Code: %s\n", code)
+	fmt.Printf("Code: %s (seed %d)\n", code, seed)
 
 	// assess guesses until the codebreaker guesses correctly
 	numGuesses := 0
