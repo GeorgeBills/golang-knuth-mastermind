@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"math"
 	"math/rand"
+	"sync"
 	"time"
 )
 
@@ -11,20 +12,55 @@ func main() {
 	seed := time.Now().Unix()
 	guessch := make(chan code)
 	feedbackch := make(chan feedback)
-	go codemaker(seed, guessch, feedbackch)
-	go codebreaker(guessch, feedbackch)
+	wg := &sync.WaitGroup{}
+	wg.Add(2)
+	go codemaker(seed, guessch, feedbackch, wg)
+	go codebreaker(guessch, feedbackch, wg)
+	wg.Wait()
 }
 
-func codemaker(seed int64, guessch <-chan code, feedbackch chan<- feedback) {
+func codemaker(seed int64, guessch <-chan code, feedbackch chan<- feedback, wg *sync.WaitGroup) {
 	source := rand.NewSource(seed)
 	rnd := rand.New(source)
 	code := randomCode(rnd)
 	fmt.Printf("Code: %s\n", code)
+
+	// assess guesses until the codebreaker guesses correctly
+	numGuesses := 0
+	for guess := range guessch {
+		numGuesses++
+		feedback := code.assess(guess)
+		feedbackch <- feedback
+		if feedback.isCorrect() {
+			break
+		}
+	}
+
+	fmt.Printf("Finished: guesser took %d guesses\n", numGuesses)
+	close(feedbackch)
+	wg.Done()
 }
 
-func codebreaker(guessch chan<- code, feedbackch <-chan feedback) {
+func codebreaker(guessch chan<- code, feedbackch <-chan feedback, wg *sync.WaitGroup) {
 	possibles := getPossibleCodes()
 	fmt.Printf("%d possible codes\n", len(possibles))
+
+	// make initial guess
+	guessch <- code{cpBlack, cpBlack, cpWhite, cpWhite}
+	feedback := <-feedbackch
+
+	// loop until we've guessed correctly
+	for !feedback.isCorrect() {
+		// literally the worst guessing algorithm possible
+		guess := possibles[0]
+		possibles = possibles[1:]
+		fmt.Printf("Guessing %s\n", guess)
+		guessch <- guess
+		feedback = <-feedbackch
+	}
+
+	close(guessch)
+	wg.Done()
 }
 
 func randomCode(rnd *rand.Rand) code {
