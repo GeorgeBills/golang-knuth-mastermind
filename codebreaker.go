@@ -17,7 +17,10 @@ func codebreaker(guessch chan<- code, feedbackch <-chan feedback, wg *sync.WaitG
 
 	// loop until we've guessed correctly
 	for !feedback.isCorrect() {
-		// literally the worst guessing algorithm possible
+		// eliminate any codes that wouldn't have produced this result
+		possibles = eliminateCodes(possibles, guess, feedback)
+
+		// take the next guess
 		guess, possibles = possibles[0], possibles[1:]
 		fmt.Printf("Guessing %s\n", guess)
 		guessch <- guess
@@ -26,6 +29,17 @@ func codebreaker(guessch chan<- code, feedbackch <-chan feedback, wg *sync.WaitG
 
 	close(guessch)
 	wg.Done()
+}
+
+func eliminateCodes(codes []code, guess code, fb feedback) []code {
+	ret := make([]code, 0, len(codes))
+	for _, code := range codes {
+		actual := code.assess(guess)
+		if actual == fb {
+			ret = append(ret, code)
+		}
+	}
+	return ret
 }
 
 func getPossibleCodes() []code {
