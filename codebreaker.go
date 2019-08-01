@@ -16,7 +16,7 @@ func codebreaker(guessch chan<- code, feedbackch <-chan feedback, wg *sync.WaitG
 
 	makeGuess := func(guess code) feedback {
 		fmt.Printf("Guessing %s\n", guess)
-	guessch <- guess
+		guessch <- guess
 		return <-feedbackch
 	}
 
@@ -24,7 +24,7 @@ func codebreaker(guessch chan<- code, feedbackch <-chan feedback, wg *sync.WaitG
 	for {
 		// take the next guess
 		guess := pickGuess(possibles, unguessed)
-	feedback := makeGuess(guess)
+		feedback := makeGuess(guess)
 
 		fmt.Printf("Feedback: %v\n", feedback)
 
@@ -87,23 +87,16 @@ func pickGuess(possibleCodes, unguessedCodes []code) code {
 	type candidate struct {
 		guess        code
 		minRemaining int
+		isPossible   bool
 	}
 	best := candidate{
 		minRemaining: len(possibleCodes) + 1,
 	}
 
-	// if it's a coin flip then just pick at random. this is necessary to avoid
-	// a pathological case where the algorithm finds that almost any possible
-	// guess will at best knock out one of the two alternatives, and then keeps
-	// picking guesses that aren't possible answers.
-	// TODO: fix the algorithm to prefer guesses that are also in possibleCodes
-	if len(possibleCodes) <= 2 {
-		return possibleCodes[0]
-	}
-
 	// for each guess we could make...
-	for _, possibleGuess := range unguessedCodes {
+	for _, candidateGuess := range unguessedCodes {
 		var maxRemaining int
+		var isPossible bool
 
 		// for each feedback the codemaker could possibly give for that guess..
 		for _, feedback := range possibleFeedbacks {
@@ -111,7 +104,13 @@ func pickGuess(possibleCodes, unguessedCodes []code) code {
 			// how many possible codes would remain after that feedback?
 			numRemaining := 0
 			for _, possibleCode := range possibleCodes {
-				actual := possibleCode.assess(possibleGuess)
+
+				if candidateGuess == possibleCode {
+					// our guess is in the set of possible codes
+					isPossible = true
+				}
+
+				actual := possibleCode.assess(candidateGuess)
 				if actual == feedback {
 					numRemaining++
 				}
@@ -123,10 +122,14 @@ func pickGuess(possibleCodes, unguessedCodes []code) code {
 			}
 		}
 
-		// if the maximum remaining possiblities after making this guess are
-		// less than the current best minimum then it's the new best guess.
-		if maxRemaining < best.minRemaining {
-			best = candidate{possibleGuess, maxRemaining}
+		// if the maximum remaining possibilities after making this guess are
+		// less than the current best minimum then this is the new best guess.
+		// this is also the new best guess if the number of possiblities are
+		// equal and this guess is possibly the code (i.e. if we could win with
+		// this answer).
+		if maxRemaining < best.minRemaining ||
+			(!best.isPossible && isPossible && maxRemaining == best.minRemaining) {
+			best = candidate{candidateGuess, maxRemaining, isPossible}
 		}
 	}
 
