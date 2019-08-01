@@ -14,23 +14,28 @@ func codebreaker(guessch chan<- code, feedbackch <-chan feedback, wg *sync.WaitG
 	unguessed := make([]code, len(possibles))
 	copy(unguessed, possibles)
 
-	// make initial guess
 	fmt.Printf("%d possible codes\n", len(possibles))
-	guess := code{cpBlack, cpBlack, cpWhite, cpWhite}
+
+	makeGuess := func(guess code) feedback {
+		fmt.Printf("Guessing %s\n", guess)
 	guessch <- guess
-	feedback := <-feedbackch
+		return <-feedbackch
+	}
+
+	// make initial guess
+	guess := code{cpBlack, cpBlack, cpWhite, cpWhite}
+	feedback := makeGuess(guess)
 
 	// loop until we've guessed correctly
 	for !feedback.isCorrect() {
 		// eliminate any codes that wouldn't have produced this result
 		possibles = eliminateCodes(possibles, guess, feedback)
+		fmt.Printf("%d possible codes\n", len(possibles))
 
 		// take the next guess
-		fmt.Printf("%d possible codes\n", len(possibles))
 		guess = pickGuess(possibles, unguessed)
-		fmt.Printf("Guessing %s\n", guess)
-		guessch <- guess
-		feedback = <-feedbackch
+		feedback = makeGuess(guess)
+
 		fmt.Printf("Feedback: %v\n", feedback)
 	}
 
